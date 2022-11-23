@@ -7,54 +7,55 @@ addpath fouriertools
 
 rho = 2; % marginal variance
 len = 5; % length scale
-p = .85;  % power-law power
+p = 1.5;  % power-law power
 
 % Set x grid
 nx = 40; % number of points
-xgrid = (0:nx-1)'; % regular grid of x points
-kperiod = nx;
+dx = 0.1;
+xgrid = dx*(0:nx-1)'; % regular grid of x points
+kperiod = nx*dx; % this is the period of the kernel
 
 
 %% 1. Build periodic kernel explicitly in time domain
 
-% calculate # of periods needed to fall to 1e-8 of its height
-nperiods = min(100,ceil(((2*log(1e8))^(1/p))*len/kperiod));
-kexpowfun = @(x1,x2)(rho*exp(-0.5*abs((x1-x2)/len).^p));
-
-K = zeros(nx,nx);
-% loop over periods
-for jj = -nperiods:nperiods
-    % Compute contribution to covariance 
-    K = K + kexpowfun(xgrid(:)+jj*kperiod,xgrid(:)'); % the covariance matrix
-end
+% % calculate # of periods needed to fall to 1e-8 of its height
+% nperiods = min(100,ceil(((2*log(1e8))^(1/p))*len/kperiod));
+% kexpowfun = @(x1,x2)(rho*exp(-0.5*abs((x1-x2)/len).^p));
+% 
+% K = zeros(nx,nx);
+% % loop over periods
+% for jj = -nperiods:nperiods
+%     % Compute contribution to covariance 
+%     K = K + kexpowfun(xgrid(:)+jj*kperiod,xgrid(:)'); % the covariance matrix
+% end
 
 % -------------------------
 % EQUIVALENT FUNCTION CALL:
-% K2 = Kexppow_circular(xgrid,len,rho,p,kperiod);
+K = Kexppow_circular(xgrid,len,rho,p,kperiod);
 % -------------------------
 
 %% 2. Efficiently compute power spectrum and build in Fourier domain
 
-% efficiently compute Fourier spectrum
-jjperiod = -nperiods:nperiods;
-xgridAllLags = xgrid(:)+(jjperiod*kperiod);  % set of all lags (as a matrix)
-
-% compute single row of K matrix
-krow = sum(rho*exp(-0.5*(abs(xgridAllLags)/len).^p),2); 
-
-% compute its Fourier power spectrum
-cdiag = abs(fft(krow)); 
-
-% Now make (inverse) FFT basis matrix
-Bfft = realfftbasis(nx)';
-
-% now build K explicitly
-Kfd = Bfft*diag(cdiag)*Bfft';
+% % efficiently compute Fourier spectrum
+% jjperiod = -nperiods:nperiods;
+% xgridAllLags = xgrid(:)+(jjperiod*kperiod);  % set of all lags (as a matrix)
+% 
+% % compute single row of K matrix
+% krow = sum(rho*exp(-0.5*(abs(xgridAllLags)/len).^p),2); 
+% 
+% % compute its Fourier power spectrum
+% cdiag = abs(fft(krow)); 
+% 
+% % Now make (inverse) FFT basis matrix
+% Bfft = realfftbasis(nx)';
+% 
+% % now build K explicitly
+% Kfd = Bfft*diag(cdiag)*Bfft';
 
 % -------------------------
 % EQUIVALENT FUNCTION CALL:
-% [cdiag2,B2] = Kexppow_circular_fourierGridded(xgrid,len,rho,p,kperiod);
-% Kfd2 = B2*diag(cdiag2)*B2';
+[cdiag,Bfft] = Kexppow_circular_fourierGridded(xgrid,len,rho,p,kperiod);
+Kfd = Bfft*diag(cdiag2)*Bfft';
 % -------------------------
 
 
