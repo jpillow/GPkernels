@@ -55,7 +55,7 @@ K = Kexppow_circular(xgrid,len,rho,p,kperiod);
 % -------------------------
 % EQUIVALENT FUNCTION CALL:
 [cdiag,Bfft] = Kexppow_circular_fourierGridded(xgrid,len,rho,p,kperiod);
-Kfd = Bfft*diag(cdiag2)*Bfft';
+Kfd = Bfft*diag(cdiag)*Bfft';
 % -------------------------
 
 
